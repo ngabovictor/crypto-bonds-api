@@ -21,43 +21,55 @@ def index(request):
     return JsonResponse({"Hello": "World"}, safe=False)
 
 
-
+@csrf_exempt
 def register(request):
     if request.method == 'POST':
         nid = request.POST.get('id', '')
         phone = request.POST.get('phone', '')
 
-        kp = Keypair.random()
-        public_key = kp.address().decode()
-        private_key = kp.seed().decode()
-
-
-        r = requests.get(fund_url+public_key)
-
         response = {}
         response_status = 200
 
-        if r.status_codes == 200:
+        check = Account.objects.filter(id=nid)
 
-            Account.objects.create(
-                phone=phone,
-                id=nid,
-                public_key=public_key,
-                private_key=private_key
-            )
+        if True:
+    
 
-            response['private_key'] = private_key
-            response['public_key'] = public_key
-            response['phone'] = phone
-            response['id'] = nid
+            kp = Keypair.random()
+            public_key = kp.address().decode()
+            private_key = kp.seed().decode()
 
-            response_status = 200
+
+            r = requests.get(fund_url+public_key)
+
+
+            if r.status_code == 200:
+
+                Account.objects.create(
+                    phone=phone,
+                    id=nid,
+                    public_key=public_key,
+                    private_key=private_key
+                )
+
+                response['private_key'] = private_key
+                response['public_key'] = public_key
+                response['phone'] = phone
+                response['id'] = nid
+
+                response_status = 200
+
+            else:
+                response['message'] = "Something went wrong. Please try again"
+                response_status = 402
+
+            return JsonResponse(response, status=response_status, safe=False)
 
         else:
-            response['message'] = "Something went wrong. Please try again"
-            response_status = 400
+            response_status = 301
+            response['message'] = "This account is already registered."
 
-        return JsonResponse(response, status=response_status, safe=False)
+            return JsonResponse(response, status=response_status, safe=False)
 
 
 
